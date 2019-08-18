@@ -45,7 +45,7 @@ export class LoginComponent implements OnInit {
           this.validateAdmin(success.user);
         })
         .catch(err => {
-          console.log(err);
+          console.log(err)
           this.error = err;
         });
     }
@@ -53,8 +53,8 @@ export class LoginComponent implements OnInit {
 
   // Check if user is admin & route to homepage
   validateAdmin(userCredential: User) {
-    const userRef: AngularFirestoreDocument<any> = this.afs.doc(`admins/${userCredential.uid}`);
-    const user = userRef.valueChanges();
+    const userDoc = this.afs.collection("admins").doc(userCredential.uid)
+    const user = userDoc.valueChanges();
     user.subscribe(value => {
       if (value !== undefined) {
         localStorage.setItem('user', this.af.idToken + '');

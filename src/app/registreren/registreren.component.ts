@@ -37,13 +37,10 @@ export class RegistrerenComponent implements OnInit {
     if (this.loginForm.valid) {
       this.af.auth.createUserWithEmailAndPassword(this.loginForm.value.email, this.loginForm.value.password)
         .then((result) => {
-          console.log(result);
           this.updateUserData(result.user);
           localStorage.setItem('user', this.af.idToken + '');
-          console.log(this.af.user);
           this.router.navigate(['/']);
         }).catch((err) => {
-          console.log(err);
           this.error = err;
         });
     }
@@ -51,13 +48,13 @@ export class RegistrerenComponent implements OnInit {
 
   // Update user in database (set admin to true)
   private updateUserData(user) {
-    const userRef: AngularFirestoreDocument<any> = this.afs.doc(`admins/${user.uid}`);
+    const userDoc = this.afs.collection("admins").doc(user.uid)
     const data: User = {
       uid: user.uid,
       email: user.email,
       displayName: this.loginForm.value.name,
       admin: true
     };
-    return userRef.set(data, { merge: true });
+    return userDoc.set(data, { merge: true });
   }
 }
