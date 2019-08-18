@@ -30,6 +30,7 @@ import { AngularFireAuthModule } from 'angularfire2/auth';
 import { firebaseAndroidConfig } from 'src/environments/environment';
 import { AngularFireDatabaseModule  } from 'angularfire2/database';
 import { AngularFirestoreModule } from '@angular/fire/firestore';
+import { AngularFireStorageModule } from '@angular/fire/storage'
 import { RegistrerenComponent } from './registreren/registreren.component';
 import { GebruikersComponent } from './gebruikers/gebruikers.component';
 import { AankondigingenComponentDialog } from './aankondiging-empty/aankondigingdialog.component';
@@ -101,6 +102,7 @@ registerLocaleData(localeNl);
     AngularFireAuthModule,
     AngularFirestoreModule,
     AngularFireDatabaseModule,
+    AngularFireStorageModule,
     MatNativeDateModule,
     CommonModule,
     FormsModule,
