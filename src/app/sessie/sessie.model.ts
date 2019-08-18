@@ -30,7 +30,7 @@ export class Sessie {
   /**
    * Geeft het sessieId van de sessie terug
    */
-  get sessieId(): number {
+  get id(): number {
     return this._id;
   }
 
@@ -53,7 +53,7 @@ export class Sessie {
    * wijzigt het id van de sessie
    * @param id: dit is het nieuwe sessieID
    */
-  set sessieId(id: number) {
+  set id(id: number) {
     this._id = id;
   }
 
