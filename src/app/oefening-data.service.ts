@@ -1,85 +1,78 @@
 import { Injectable } from '@angular/core';
 import { Oefening } from './oefening/oefening.model';
-import { HttpClient } from '@angular/common/http';
-import * as globals from '../globals/globals';
 import { Observable } from 'rxjs/Observable';
 import { Feedback } from './feedback/feedback.model';
+import { AngularFireStorage } from '@angular/fire/storage'
+import {
+  AngularFirestore,
+} from '@angular/fire/firestore';
+import { v4 as uuid } from 'uuid'
+import { finalize } from 'rxjs/operators';
 
 @Injectable()
 export class OefeningDataService {
-  constructor(private http: HttpClient) {}
+  constructor(private afs: AngularFirestore, private storage: AngularFireStorage) {}
 
   getOefeningen(): Observable<Oefening[]> {
-    return this.http.get<Oefening[]>(globals.backendUrl + `/oefeningen`).pipe();
+    const oefeningCollection = this.afs.collection('Oefeningen')
+    const oefeningen: Observable<any> = oefeningCollection.valueChanges()
+    return oefeningen
   }
 
   getOefeningenFromSessie(sessieId: number): Observable<Oefening[]> {
-    return this.http
-      .get<Oefening[]>(globals.backendUrl + `/oefeningen/` + sessieId)
-      .pipe();
+    const oefeningCollection = this.afs.collection('Oefeningen', oef => oef.where('sId', '==', sessieId.toString()))
+    const oefeningen: Observable<any> = oefeningCollection.valueChanges()
+    return oefeningen
   }
 
   getOefening(oefeningId: number): Observable<Oefening> {
-    return this.http
-    .get<Oefening>(globals.backendUrl + `/oefeningen/oef/` + oefeningId)
-    .pipe();
+    const oefeningDoc = this.afs.collection("Oefeningen").doc(oefeningId.toString())
+    const oefening: Observable<any> = oefeningDoc.valueChanges()
+    return oefening
   }
 
-  voegNieuweOefeningToe(oefening: Oefening): Observable<Oefening> {
-    const fd = new FormData();
-    fd.append('naam', oefening.naam);
-    fd.append('beschrijving', oefening.beschrijving);
-    fd.append('sessieId', oefening.sessieId.toString());
-    fd.append('groepen', oefening.groepen);
-    fd.append('file', oefening.file);
+  voegNieuweOefeningToe(oefening: Oefening){
+    const id = uuid()
+    const ref = this.storage.ref(`PDF/${oefening.file.name}`)
+    const task = this.storage.upload(`PDF/${oefening.file.name}`, oefening.file)
+    task.snapshotChanges().pipe(
+      finalize(() => {
+        let url = ''
+        ref.getDownloadURL().subscribe(downloadUrl => {
+          url = downloadUrl
 
-    return this.http
-      .post<Oefening>(globals.backendUrl + `/oefeningen`, fd)
-      .pipe();
+          const doc = {
+            'naam': oefening.naam,
+            'beschrijving': oefening.beschrijving,
+            'mimeType': oefening.file.type,
+            'fileNaam': oefening.file.name,
+            'sId': oefening.sessieId.toString(),
+            'id': id,
+            'datumGemaakt': oefening.datumGemaakt,
+            'url': url,
+            'groepen': oefening.groepen
+          }
+          this.afs.collection('Oefeningen').doc(id.toString()).set(doc)
+        })
+      })
+    ).subscribe()
   }
 
   verwijderOefening(oefening: Oefening) {
-    return this.http
-      .delete(globals.backendUrl + '/oefeningen/' + oefening.oefeningId)
-      .subscribe(
-        res => {
-          console.log(res);
-        },
-        err => {
-          console.log(err);
-        }
-      );
+    this.afs.collection('Oefeningen').doc(oefening.id.toString()).delete()
   }
 
   updateOefening(oefening: Oefening) {
-    return this.http
-      .put(globals.backendUrl + '/oefeningen/', oefening)
-      .subscribe(
-        res => {
-          console.log(res);
-        },
-        err => {
-          console.log(err);
-        }
-      );
+    this.afs.collection('Oefeningen').doc(oefening.id.toString()).set(oefening, { merge: true })
   }
 
   getFeedbackFromOefening(oefeningId: number): Observable<Feedback[]> {
-    return this.http
-    .get<Feedback[]>(globals.backendUrl + `/oefeningen/oef/` + oefeningId + '/feedback')
-    .pipe();
+    let feedbackCollection = this.afs.collection('Feedback', oef => oef.where('oefId', '==', oefeningId))
+    let feedbacks: Observable<any> = feedbackCollection.valueChanges()
+    return feedbacks
   }
 
   verwijderFeedbackOefening(oefeningId: number) {
-    return this.http
-      .delete(globals.backendUrl + '/oefeningen/oef/' + oefeningId + '/feedback')
-      .subscribe(
-        res => {
-          console.log(res);
-        },
-        err => {
-          console.log(err);
-        }
-      );
+    this.afs.collection('Feedback').doc(oefeningId.toString()).delete()
   }
 }
