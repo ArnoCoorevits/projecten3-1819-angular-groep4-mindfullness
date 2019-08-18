@@ -11,6 +11,7 @@ export class Oefening {
     private _fileOriginalName: string;
     private _fileSize: number;
     private _groepen: string;
+    private _url: string;
 
     constructor(naam: string, beschrijving: string, sessieId: number) {
       this._naam = naam;
@@ -21,7 +22,7 @@ export class Oefening {
     /**
      * Geeft het id van een oefening terug
      */
-    get oefeningId(): number {
+    get id(): number {
       return this._oefeningId;
     }
 
@@ -74,6 +75,10 @@ export class Oefening {
       return this._groepen;
     }
 
+    get url(): string {
+      return this._url;
+    }
+
     /**
      * Verandert de naam van de oefening
      * @param naam: Dit is de nieuwe naam van de oefening
@@ -114,6 +119,10 @@ export class Oefening {
       this._groepen = groepen;
     }
 
+    set url(url: string){
+      this._url = url;
+    }
+
     /**
      * Verandert het sessieid van de oefening
      * @param id: Dit is de nieuwe sessieId van de oefening
@@ -133,7 +142,7 @@ export class Oefening {
 
     toJSON() {
       return {
-        oefeningId: this.oefeningId,
+        oefeningId: this.id,
         naam: this._naam,
         beschrijving: this._beschrijving,
         sessieId: this._sessieId,
@@ -141,7 +150,8 @@ export class Oefening {
         fileName: this._fileName,
         fileOriginalName: this._fileOriginalName,
         fileSize: this._fileSize,
-        groepen: this._groepen
+        groepen: this._groepen,
+        url: this._url
       };
     }
   }
