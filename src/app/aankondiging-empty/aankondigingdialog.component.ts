@@ -49,7 +49,6 @@ constructor(private dialog: MatDialog, private db :AngularFireDatabase ,
       }
     });
     this.groepNummers.sort();
-    console.log(this.groepNummers.length);
   }
   save() {
     this.dialogRef.close(this.form.value);
