@@ -7,10 +7,10 @@ export const environment = {
 };
 
 export const firebaseAndroidConfig = {
-  apiKey: 'AIzaSyB6yKdGduZc5o7goCReFEFn2BwNjVTPoa4',
-  authDomain: 'projecten3-1819-android-groep4.firebaseapp.com',
-  databaseURL: 'https://projecten3-1819-android-groep4.firebaseio.com',
-  projectId: 'projecten3-1819-android-groep4',
-  storageBucket: 'projecten3-1819-android-groep4.appspot.com',
-  messagingSenderId: '1084064931254'
+  apiKey: 'AIzaSyCDQwqYJp_drZ5XgthaVtWdf_5hCbgA5ZI',
+  authDomain: 'herexamenprojecten3mindfulness.firebaseapp.com',
+  databaseURL: 'https://herexamenprojecten3mindfulness.firebaseio.com',
+  projectId: 'herexamenprojecten3mindfulness',
+  storageBucket: 'herexamenprojecten3mindfulness.appspot.com',
+  messagingSenderId: '736713069080'
 };
