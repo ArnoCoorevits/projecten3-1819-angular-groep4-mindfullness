@@ -68,7 +68,7 @@ export class OefeningEmptyComponent implements OnInit {
   oefeningOpslaan() {
     if (this.oefeningFormGroup.valid) {
       const oefening = new Oefening(this.oefeningFormGroup.value.oefeningNaam,
-        this.oefeningFormGroup.value.oefeningBeschrijving, this.data.sessieId);
+        this.oefeningFormGroup.value.oefeningBeschrijving, this.data.id);
       let groepen = '';
       this.selectedGroepnummers.forEach(element => {
         groepen = groepen + element + ',';
@@ -76,7 +76,7 @@ export class OefeningEmptyComponent implements OnInit {
       groepen = groepen.slice(0, -1);
       oefening.groepen = groepen;
       oefening.file = this._file;
-      this.dialogRef.close(this._oefDataService.voegNieuweOefeningToe(oefening).subscribe());
+      this.dialogRef.close(this._oefDataService.voegNieuweOefeningToe(oefening));
     }
   }
 
