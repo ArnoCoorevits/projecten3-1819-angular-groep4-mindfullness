@@ -1,8 +1,5 @@
 import { Injectable } from '@angular/core';
 import { AngularFireAuth } from 'angularfire2/auth';
-
-import { BehaviorSubject } from 'rxjs/BehaviorSubject';
-import { Observable } from 'rxjs/Observable';
 import 'rxjs/add/observable/of';
 import 'rxjs/add/operator/switchMap';
 
@@ -11,11 +8,11 @@ import 'rxjs/add/operator/switchMap';
 })
 export class AuthenticationService {
 
-  public aangemeld: Boolean = false;
+  public loggedIn: Boolean = false;
 
   constructor(private af: AngularFireAuth) {
     if (this.af.user) {
-      this.aangemeld = true;
+      this.loggedIn = true;
     }
    }
 }

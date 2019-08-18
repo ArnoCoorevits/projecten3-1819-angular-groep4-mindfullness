@@ -139,7 +139,7 @@ export class FeedbackComponent implements OnInit, OnChanges {
   // HTTP request to get the feedback from an exercise
   getFeedback(oefening: Oefening): Observable<Feedback[]> {
     return this._oefDataService
-      .getFeedbackFromOefening(oefening.oefeningId);
+      .getFeedbackFromOefening(oefening.id);
   }
 
   // Calculate mean percentage of all feedback from an exercise
@@ -164,7 +164,7 @@ export class FeedbackComponent implements OnInit, OnChanges {
       data: {
         dataName: '',
         dataSentence: 'Ben je zeker dat je alle feedback van deze oefening wilt verwijderen?',
-        dataId: this._oefening.oefeningId
+        dataId: this._oefening.id
       }
     });
 
@@ -172,7 +172,7 @@ export class FeedbackComponent implements OnInit, OnChanges {
       if (r) {
         this._feedback = null;
         // Remove feedback
-        this._oefDataService.verwijderFeedbackOefening(this._oefening.oefeningId);
+        this._oefDataService.verwijderFeedbackOefening(this._oefening.id);
       }
     });
   }

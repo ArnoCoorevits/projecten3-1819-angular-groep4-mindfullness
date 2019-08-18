@@ -24,13 +24,13 @@ export interface Groep {
 export class GebruikersComponent implements OnInit {
   private _gebruikers: Observable<any[]>;
   public groepen: Groep[] = [];
-  public groepNummers = ['Ø'];
+  public groepNummers = [];
   public selectedGroepNr = 'Ø';
   public selectedGroep = 'Alle gebruikers';
-  public displayedColumns: string[] = ['name', 'email', 'group', 'delete'];
-  public dataSource: MatTableDataSource<any>;
-  public displayedColumnsAdd: string[] = ['name', 'email', 'group', 'add'];
-  public dataSourceAll: MatTableDataSource<any>;
+  public displayedColumns: string[] = ['name', 'email', 'telNr', 'regio', 'group', 'delete'];
+  public dataSource: MatTableDataSource<any> = new MatTableDataSource([]);
+  public displayedColumnsAdd: string[] = ['name', 'email', 'telNr', 'regio', 'group', 'add'];
+  public dataSourceAll: MatTableDataSource<any> = new MatTableDataSource([]);
 
   constructor(
     public afDb: AngularFireDatabase,
@@ -43,8 +43,8 @@ export class GebruikersComponent implements OnInit {
     this._gebruikers.subscribe(result => {
       this.setGroepen(result);
       // Initial setup data listviews
-      this.dataSource = new MatTableDataSource(result);
-      this.dataSourceAll = new MatTableDataSource(result);
+      this.dataSource.data = result //= new MatTableDataSource(result);
+      this.dataSourceAll.data = result;
     });
   }
 
@@ -57,29 +57,27 @@ export class GebruikersComponent implements OnInit {
 
   // Initial setup groups
   setGroepen(result: any[]) {
-    result.forEach(gebruiker => {
-      if (
-        gebruiker.groepnr !== undefined &&
-        this.groepNummers.indexOf(gebruiker.groepnr) === -1 &&
-        gebruiker.groepnr !== '0'
-      ) {
-        this.groepNummers.push(gebruiker.groepnr);
-      }
-    });
-
-    const subList = this.groepNummers.slice(1, this.groepNummers.length + 1);
-    subList.sort();
-
-    this.groepNummers = ['Ø'];
-    this.groepNummers = this.groepNummers.concat(subList);
-
-    this.groepNummers.forEach(nummer => {
-      if (nummer !== 'Ø') {
-        this.groepen.push({ value: nummer, viewValue: 'Groep ' + nummer });
-      } else {
-        this.groepen.push({ value: '0', viewValue: 'Geen groep' });
-      }
-    });
+      this.groepNummers = []
+      this.groepen = []
+      result.forEach(gebruiker => {
+        if (
+          gebruiker.groepnr !== undefined &&
+          this.groepNummers.indexOf(gebruiker.groepnr) === -1 &&
+          gebruiker.groepnr !== '0'
+        ) {
+          this.groepNummers.push(gebruiker.groepnr);
+        }
+      });
+      this.groepNummers = this.groepNummers.sort()
+      this.fillMissingGroupNumbers(this.groepNummers[this.groepNummers.length - 1])
+      this.groepNummers.unshift("Ø")
+      this.groepNummers.forEach(nummer => {
+        if (nummer !== 'Ø') {
+          this.groepen.push({ value: nummer, viewValue: 'Groep ' + nummer });
+        } else {
+          this.groepen.push({ value: '0' || "", viewValue: 'Geen groep' });
+        }
+      });
   }
 
   // Filter list by name
@@ -89,7 +87,7 @@ export class GebruikersComponent implements OnInit {
 
   // Apply filter on group change
   applyGroepFilter(filterValue: string) {
-    this._gebruikers.subscribe(result => {
+    this.getUsers().subscribe(result => {
       this.dataSource = new MatTableDataSource(result);
       this.dataSourceAll = new MatTableDataSource(result);
       if (filterValue !== 'Ø') {
@@ -120,7 +118,7 @@ export class GebruikersComponent implements OnInit {
   // Update list data when not showing all users ('Ø' page)
   updateListData() {
     if (this.selectedGroepNr !== 'Ø') {
-      this._gebruikers.subscribe(result => {
+      this.getUsers().subscribe(result => {
         this.dataSource = new MatTableDataSource(result);
         this.dataSourceAll = new MatTableDataSource(result);
         const newData = [];
@@ -142,8 +140,8 @@ export class GebruikersComponent implements OnInit {
   }
 
   // Change the groupnr of a user
-  changeGroup(uid, nr) {
-    const gebruiker = this.gService.getUserById(uid);
+  changeGroup(id, nr) {
+    const gebruiker = this.gService.getUserById(id);
     gebruiker.subscribe(result => {
       let telnr = 0;
       if (result.telnr) {
@@ -166,11 +164,10 @@ export class GebruikersComponent implements OnInit {
         name: result.name,
         telnr: telnr,
         regio: regio,
-        sessieid: sessieid
+        sessieId: sessieid
       };
       this.gService
-        .updateUser(uid, updatedGebruiker)
-        .subscribe();
+        .updateUser(id, updatedGebruiker)
       this.showSnackBar(updatedGebruiker.name, 'ok');
 
       this.updateListData();
@@ -191,7 +188,6 @@ export class GebruikersComponent implements OnInit {
   // Add a new group
   addGroup() {
     const n: number = +this.groepen[this.groepen.length - 1].value + 1;
-    console.log(n);
     this.groepen.push({ value: n.toString(), viewValue: 'Groep ' + n });
     this.groepNummers.push(n.toString());
   }
@@ -212,17 +208,23 @@ export class GebruikersComponent implements OnInit {
       dialogRef.afterClosed().subscribe(r => {
         if (r) {
           // Remove user
-          this.gService.removeUser(uid).subscribe(res => {
-            console.log(res);
-          });
+          this.gService.removeUser(uid)
           this._gebruikers = this.getUsers();
           this._gebruikers.subscribe(res => {
             // this.setGroepen(res);
             this.dataSource = new MatTableDataSource(res);
-            console.log(this.dataSource.data);
           });
         }
       });
     });
+  }
+
+  fillMissingGroupNumbers(groupnr: string){
+    for (let i = 1; i <= parseInt(groupnr); i++){
+      if (!this.groepNummers.includes(i.toString())){
+        this.groepNummers.push(i.toString())
+      }
+    }
+    this.groepNummers.sort()
   }
 }

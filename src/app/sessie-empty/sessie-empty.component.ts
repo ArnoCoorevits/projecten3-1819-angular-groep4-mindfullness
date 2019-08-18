@@ -38,7 +38,7 @@ export class SessieEmptyComponent implements OnInit {
       );
 
       this.dialogRef.close(
-        this._sessieDataService.voegNieuweSessieToe(sessie).subscribe()
+        this._sessieDataService.voegNieuweSessieToe(sessie)
       );
     }
   }

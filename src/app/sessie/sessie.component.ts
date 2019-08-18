@@ -98,7 +98,7 @@ export class SessieComponent implements OnInit, OnChanges {
 
   getOefeningen() {
     return this._oefDataService
-      .getOefeningenFromSessie(this.sessie.sessieId)
+      .getOefeningenFromSessie(this.sessie.id)
       .subscribe(
         oefs => (this._oefeningen = oefs),
         (error: HttpErrorResponse) => {

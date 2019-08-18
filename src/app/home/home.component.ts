@@ -43,7 +43,6 @@ export class HomeComponent implements OnInit {
         if (user) {
           user.subscribe(value => {
             this.name$ = value.displayName;
-            // console.log(value.displayName);
           });
         }
       }
