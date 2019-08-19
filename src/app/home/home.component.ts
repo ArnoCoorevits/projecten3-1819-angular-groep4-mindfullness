@@ -25,7 +25,7 @@ export class HomeComponent implements OnInit {
   private name$: Observable<String>;
   private _onGelezenBericht = 0;
 
-  private dbChat: Observable<any>;
+  private chat: Observable<any>;
   private dbMessages: Observable<any>;
 
   constructor(public af: AngularFireAuth, private afs: AngularFirestore, private db: AngularFireDatabase) {
@@ -36,13 +36,11 @@ export class HomeComponent implements OnInit {
 
     const cu = this.af.user.subscribe(au => {
       if (au) {
-        const userRef: AngularFirestoreDocument<any> = this.afs.doc(
-          `admins/${au.uid}`
-        );
+        const userRef = this.afs.collection("admins").doc(au.uid.toString())
         const user = userRef.valueChanges();
         if (user) {
           user.subscribe(value => {
-            this.name$ = value.displayName;
+          //  this.name$ = value.displayName
           });
         }
       }
@@ -50,11 +48,11 @@ export class HomeComponent implements OnInit {
   }
 
   controleerGelezen() {
-    this.dbChat = this.db.list('Chat/').snapshotChanges();
+    this.chat = this.afs.collection('Chat').snapshotChanges()
 
-    this.dbChat.subscribe(actions => {
+    this.chat.subscribe(actions => {
       actions.forEach(chat => {
-        this.dbMessages = this.db.list('Chat/' + chat.key).valueChanges();
+        this.dbMessages = this.db.list('Chat' + chat.key).valueChanges();
         this._onGelezenBericht = 0;
 
         this.dbMessages.subscribe(messages => {

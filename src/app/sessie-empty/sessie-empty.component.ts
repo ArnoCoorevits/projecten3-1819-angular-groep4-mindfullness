@@ -29,17 +29,4 @@ export class SessieEmptyComponent implements OnInit {
   onNoClick(): void {
     this.dialogRef.close();
   }
-
-  sessieOpslaan() {
-    if (this.sessieFormGroup.valid) {
-      const sessie = new Sessie(
-        this.sessieFormGroup.value.sessieNaam,
-        this.sessieFormGroup.value.sessieBeschrijving
-      );
-
-      this.dialogRef.close(
-        this._sessieDataService.voegNieuweSessieToe(sessie)
-      );
-    }
-  }
 }

@@ -33,8 +33,8 @@ export class OefeningDataService {
 
   voegNieuweOefeningToe(oefening: Oefening){
     const id = uuid()
-    const ref = this.storage.ref(`PDF/${oefening.file.name}`)
-    const task = this.storage.upload(`PDF/${oefening.file.name}`, oefening.file)
+    const ref = this.storage.ref(`${oefening.file.name}`)
+    const task = this.storage.upload(`${oefening.file.name}`, oefening.file)
     task.snapshotChanges().pipe(
       finalize(() => {
         let url = ''

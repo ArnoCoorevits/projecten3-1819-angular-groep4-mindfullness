@@ -1,13 +1,8 @@
 import { Component, OnInit, OnDestroy } from "@angular/core";
-import { AngularFireDatabase, AngularFireList } from "angularfire2/database";
+import { AngularFireList } from '@angular/fire/database';
 import { Observable, Subscription } from "rxjs";
-import * as firebase from "firebase";
-import {
-  AngularFirestore,
-  AngularFirestoreDocument
-} from "@angular/fire/firestore";
+import { AngularFirestore } from "@angular/fire/firestore";
 import { AngularFireAuth } from "@angular/fire/auth";
-import { takeWhile } from "rxjs/operators";
 
 @Component({
   selector: "app-berichten",
@@ -22,40 +17,23 @@ export class BerichtenComponent implements OnInit, OnDestroy {
 
   public gekozenChatUser: ChatUser = null;
 
+  public gebruikers: Observable<any[]>
   public chat$: Observable<any[]>;
   public messagesfb$: Observable<any>;
   public gelezenMessages$: Observable<any>;
+
 
   private huidigeGebruikerSub: Subscription;
   private gelezenChecker: Subscription;
   private initieleSubscription: Subscription;
 
-  public _name: string = "";
-  textChat: string = null;
+  public name: string = "Psycholoog";
+  public textChat: string = null;
   public messages: Message[] = null;
 
-  constructor(
-    public db: AngularFireDatabase,
-    public af: AngularFireAuth,
-    private afs: AngularFirestore
-  ) {
-    this.chat$ = db.list("Chat").snapshotChanges();
-
+  constructor(public afs: AngularFirestore, public af: AngularFireAuth) {
+    this.chat$ = afs.collection("Chat").snapshotChanges();
     this.initieerLijsten();
-
-    this.af.user.subscribe(au => {
-      if (au) {
-        const userRef: AngularFirestoreDocument<any> = this.afs.doc(
-          `admins/${au.uid}`
-        );
-        const user = userRef.valueChanges();
-        if (user) {
-          user.subscribe(value => {
-            this._name = value.displayName;
-          });
-        }
-      }
-    });
   }
 
   ngOnInit() {}
@@ -73,21 +51,17 @@ export class BerichtenComponent implements OnInit, OnDestroy {
 
   //vult observables in om de lijsten van chat weer te geven.
   initieerLijsten() {
-    this.initieleSubscription = this.chat$.subscribe(actions => {
+     this.initieleSubscription = this.chat$.subscribe(actions => {
       this.klanten = [];
       this.ongelezen = [];
       actions.forEach(action => {
-        this.zoekKlant(action.key).subscribe(value => {
-          
+        this.zoekKlant(action.email).subscribe(value => {
           let chatUser = new ChatUser();
-          chatUser.naam = value;
-          chatUser.uid = action.key;
-        if(!this.klanten.find(a => a.uid === chatUser.uid)){
+          chatUser.naam = value["name"];
+          chatUser.email = action.email
           this.klanten.push(chatUser);
-
-        }
         });
-        this.geefWeerOngelezen(action.key).subscribe(value => {
+        this.geefWeerOngelezen(action.email).subscribe(value => {
           let waarde: number = 0;
           value.forEach(v => {
             if (!v.gelezen) {
@@ -101,8 +75,8 @@ export class BerichtenComponent implements OnInit, OnDestroy {
   }
 
   //haalt de naam van de klant op uit hun id die bij de chatberichten hoort en geeft deze terug als een observable.
-  zoekKlant(id: String): Observable<any> {
-    return this.db.object("Users/" + id + "/name").valueChanges();
+  zoekKlant(email: String): Observable<any> {
+    return this.afs.collection("Gebruiker").doc(email.toString()).valueChanges();
   }
 
   //Sluit huidige subscriptions en zet de huidig geselecteerde gebruiker, roept ook de getgesprekken methode op.
@@ -115,7 +89,7 @@ export class BerichtenComponent implements OnInit, OnDestroy {
     }
     this.gekozenChatUser = user;
     this.messages = [];
-    this.messagesfb$ = this.db.list("Chat/" + user.uid).valueChanges();
+    this.messagesfb$ = this.afs.collection("Chat").doc(this.gekozenChatUser.email.toString()).collection("messages").valueChanges();
     this.huidigeGebruikerSub = this.messagesfb$.subscribe(actions => {
       this.messages = [];
       actions.forEach(a => {
@@ -131,26 +105,25 @@ export class BerichtenComponent implements OnInit, OnDestroy {
         }
         this.messages.push(message);
       });
+      this.controleerGelezen();
+      this.messages = this.messages.sort(function (a,b) {
+        return (+a.messageTime - +b.messageTime)
+      })
     });
-    this.controleerGelezen();
   }
 
   //Geeft observable terug die overeenkomt met de lijst van messages van gebruiker adh van zijn uid.
-  geefWeerOngelezen(uid: String): Observable<any> {
-    return this.db.list("Chat/" + uid).valueChanges();
+  geefWeerOngelezen(email: String): Observable<any> {
+    return this.afs.collection("Chat").doc(email.toString()).collection("messages").valueChanges();
   }
 
   //steekt adh van de gekozen gebruiker alle veldjes gelezen op true.
   controleerGelezen() {
-    this.gelezenMessages$ = this.db
-      .list("Chat/" + this.gekozenChatUser.uid)
-      .snapshotChanges();
+    this.gelezenMessages$ = this.afs.collection("Chat").doc(this.gekozenChatUser.email.toString()).collection("messages").valueChanges();
     this.gelezenChecker = this.gelezenMessages$.subscribe(actions => {
       this.initieleSubscription;
       actions.forEach(a => {
-        this.db
-          .list("Chat/" + this.gekozenChatUser.uid)
-          .update(a.key, { gelezen: true });
+        this.afs.collection("Chat").doc(this.gekozenChatUser.email.toString()).collection("messages").doc(a.id).update({gelezen: true});
       });
     });
   }
@@ -161,14 +134,13 @@ export class BerichtenComponent implements OnInit, OnDestroy {
       let messageTime = Date.now();
 
       //TODO: Haal huidige admin op en vul hier in.
-      let messageUser = this._name;
+      let messageUser = this.name;
 
       //workaround omdat de database niet ingevuld is met messageUser uit de db op messages vanuit de android kant.
       let admin = true;
       let gelezen = true;
-      this.db
-        .list("Chat/" + this.gekozenChatUser.uid)
-        .push({ content: tekst, gelezen, messageTime, messageUser, admin });
+      this.afs.collection("Chat").doc(this.gekozenChatUser.email.toString())
+        .collection("messages").doc((this.messages.length+1).toString()).set({ content: tekst, gelezen, messageTime, messageUser, admin });
 
       this.textChat = "";
     }
@@ -184,6 +156,6 @@ export class Message {
 
 export class ChatUser {
   naam: String;
-  uid: String;
+  email: String;
   ongelezen: number;
 }
